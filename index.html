@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宝宝爱乖乖</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            background-attachment: fixed;
+        }
+        
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .image-container {
+            position: relative;
+            width: 80%;
+            max-width: 600px;
+            height: 60vh;
+            max-height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        .image-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            position: absolute;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(0.95);
+        }
+        
+        .image-container img.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .text-container {
+            margin-top: 30px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
+        }
+        
+        .text-container.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .text-container p {
+            font-size: 2rem;
+            color: #e74c3c;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        .buttons-container {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease 0.3s;
+        }
+        
+        .buttons-container.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .button {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.5s ease;
+            z-index: -1;
+        }
+        
+        .button:hover::before {
+            transform: translateX(100%);
+        }
+        
+        .button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .button:active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .button.forgive {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .button.forgive:hover {
+            background-color: #2980b9;
+        }
+        
+        .button.make-up {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .button.make-up:hover {
+            background-color: #c0392b;
+        }
+        
+        .final-message {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(0.9);
+        }
+        
+        .final-message.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+        }
+        
+        .final-message p {
+            font-size: 3rem;
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            animation: bounceIn 1s ease;
+        }
+        
+        /* 隐藏音频控件但保持功能 */
+        audio {
+            display: none;
+        }
+        
+        /* 动画效果 */
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .image-container {
+                width: 95%;
+                height: 50vh;
+                padding: 10px;
+            }
+            
+            .text-container p {
+                font-size: 1.5rem;
+            }
+            
+            .buttons-container {
+                flex-direction: column;
+                width: 80%;
+                gap: 15px;
+            }
+            
+            .button {
+                font-size: 1.2rem;
+                padding: 12px 30px;
+                width: 100%;
+            }
+            
+            .final-message p {
+                font-size: 2rem;
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .image-container {
+                height: 45vh;
+            }
+            
+            .text-container p {
+                font-size: 1.3rem;
+            }
+            
+            .final-message p {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 音频元素 - 完全在网页内部播放，隐藏所有控件 -->
+        <audio id="background-music" loop muted preload="auto">
+            <source src="audio/交换余生.mp3" type="audio/mpeg">
+        </audio>
+        
+        <!-- 图片容器 -->
+        <div class="image-container" id="imageContainer">
+            <!-- 图片将通过JavaScript动态添加 -->
+        </div>
+        
+        <!-- 文字容器 -->
+        <div class="text-container" id="textContainer">
+            <p id="apologyText"></p>
+        </div>
+        
+        <!-- 按钮容器 -->
+        <div class="buttons-container" id="buttonsContainer">
+            <button class="button forgive" id="forgiveButton">原谅</button>
+            <button class="button make-up" id="makeUpButton">和好</button>
+        </div>
+        
+        <!-- 最终消息 -->
+        <div class="final-message" id="finalMessage">
+            <p id="finalText"></p>
+        </div>
+    </div>
+    
+    <script>
+        // 获取DOM元素
+        const backgroundMusic = document.getElementById('background-music');
+        const imageContainer = document.getElementById('imageContainer');
+        const textContainer = document.getElementById('textContainer');
+        const apologyText = document.getElementById('apologyText');
+        const buttonsContainer = document.getElementById('buttonsContainer');
+        const finalMessage = document.getElementById('finalMessage');
+        const finalText = document.getElementById('finalText');
+        const forgiveButton = document.getElementById('forgiveButton');
+        const makeUpButton = document.getElementById('makeUpButton');
+        
+        // 日常图片数组（b1-g6共18张图片）
+        const dailyImages = [
+            'b1.jpg', 'b2.jpg', 'b3.jpg', 'b4.jpg', 'b5.jpg', 'b6.jpg', 'b7.jpg', 'b8.jpg', 'b9.jpg',
+            'b10.jpg', 'b11.jpg', 'b12.jpg', 'g1.jpg', 'g2.jpg', 'g3.jpg', 'g4.jpg', 'g5.jpg', 'g6.jpg'
+        ];
+        
+        // 道歉图片数组
+        const apologyImages = [
+            { src: 'y1.jpg', text: '大乖，俺错了' },
+            { src: 'y2.jpg', text: '可以原谅宝宝吗？' },
+            { src: 'y3.jpg', text: '' }
+        ];
+        
+        // 尝试自动播放音乐（考虑浏览器限制，可能需要用户交互）
+        function playMusic() {
+            // 先取消静音，然后尝试播放
+            backgroundMusic.muted = false;
+            backgroundMusic.play()
+                .then(() => {
+                    console.log('音乐开始播放');
+                })
+                .catch(error => {
+                    console.log('需要用户交互才能播放音乐:', error);
+                    // 监听用户交互事件
+                    document.addEventListener('click', handleUserInteraction);
+                    document.addEventListener('touchstart', handleUserInteraction);
+                });
+        }
+        
+        // 用户交互处理函数
+        function handleUserInteraction() {
+            // 取消静音并播放
+            backgroundMusic.muted = false;
+            backgroundMusic.play();
+            // 移除监听器
+            document.removeEventListener('click', handleUserInteraction);
+            document.removeEventListener('touchstart', handleUserInteraction);
+        }
+        
+        // 创建图片元素
+        function createImage(src) {
+            const img = document.createElement('img');
+            img.src = `images/${src}`;
+            img.alt = '图片';
+            return img;
+        }
+        
+        // 显示日常图片轮播
+        function showDailyImages() {
+            let currentIndex = 0;
+            
+            // 创建并添加第一张图片
+            const firstImg = createImage(dailyImages[0]);
+            firstImg.classList.add('active');
+            imageContainer.appendChild(firstImg);
+            
+            // 设置定时器轮播图片
+            const interval = setInterval(() => {
+                // 隐藏当前图片
+                const currentImg = imageContainer.querySelector('.active');
+                currentImg.classList.remove('active');
+                
+                // 更新索引
+                currentIndex++;
+                
+                if (currentIndex < dailyImages.length) {
+                    // 显示下一张日常图片
+                    let nextImg = imageContainer.querySelector(`img[src="images/${dailyImages[currentIndex]}"]`);
+                    if (!nextImg) {
+                        nextImg = createImage(dailyImages[currentIndex]);
+                        imageContainer.appendChild(nextImg);
+                    }
+                    nextImg.classList.add('active');
+                } else {
+                    // 日常图片显示完毕，清除定时器
+                    clearInterval(interval);
+                    // 开始显示道歉图片
+                    showApologyImages();
+                }
+            }, 5000); // 每张图片显示5秒
+        }
+        
+        // 页面可见时尝试播放（针对后台标签页打开的情况）
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                playMusic();
+            }
+        });
+        
+        // 显示道歉图片
+        function showApologyImages() {
+            let currentIndex = 0;
+            
+            // 清除所有日常图片
+            const allImages = imageContainer.querySelectorAll('img');
+            allImages.forEach(img => img.classList.remove('active'));
+            
+            // 显示第一张道歉图片
+            showApologyImage(currentIndex);
+            
+            // 设置定时器轮播道歉图片
+            const interval = setInterval(() => {
+                // 隐藏当前图片和文字
+                const currentImg = imageContainer.querySelector('.active');
+                currentImg.classList.remove('active');
+                
+                // 如果有文字，隐藏文字容器
+                if (currentIndex < apologyImages.length - 1) {
+                    textContainer.classList.remove('active');
+                }
+                
+                // 更新索引
+                currentIndex++;
+                
+                if (currentIndex < apologyImages.length) {
+                    // 显示下一张道歉图片
+                    showApologyImage(currentIndex);
+                } else {
+                    // 所有道歉图片显示完毕
+                    clearInterval(interval);
+                    
+                    // 对于最后一张图片(y3.jpg)，保持显示并显示按钮
+                    if (currentIndex === apologyImages.length) {
+                        buttonsContainer.classList.add('active');
+                    }
+                }
+            }, 5000); // 每张图片显示5秒
+        }
+        
+        // 显示单张道歉图片和文字
+        function showApologyImage(index) {
+            const apologyData = apologyImages[index];
+            
+            // 查找或创建图片
+            let img = imageContainer.querySelector(`img[src="images/${apologyData.src}"]`);
+            if (!img) {
+                img = createImage(apologyData.src);
+                imageContainer.appendChild(img);
+            }
+            
+            // 显示图片
+            img.classList.add('active');
+            
+            // 显示文字（如果有）
+            if (apologyData.text) {
+                apologyText.textContent = apologyData.text;
+                textContainer.classList.add('active');
+            } else {
+                textContainer.classList.remove('active');
+            }
+        }
+        
+        // 为按钮添加点击事件
+        function setupButtonEvents() {
+            // 原谅按钮点击事件
+            forgiveButton.addEventListener('click', () => {
+                showFinalMessage('谢谢大乖的原谅！我会更加珍惜你！');
+            });
+            
+            // 和好按钮点击事件
+            makeUpButton.addEventListener('click', () => {
+                showFinalMessage('我们和好了！爱你一万年！');
+            });
+        }
+        
+        // 显示最终消息
+        function showFinalMessage(message) {
+            finalText.textContent = message;
+            finalMessage.classList.add('active');
+        }
+        
+        // 在页面加载时设置按钮事件
+        window.addEventListener('DOMContentLoaded', () => {
+            // 尝试播放音乐
+            playMusic();
+            // 开始显示日常图片轮播
+            showDailyImages();
+            // 设置按钮事件
+            setupButtonEvents();
+        });
+    </script>
+</body>
+</html>
